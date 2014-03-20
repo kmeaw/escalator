@@ -39,7 +39,6 @@ static int sock_dgram(int srv)
   unix_socket_name.sun_family = AF_UNIX;
 
   strcpy(unix_socket_name.sun_path, socket_path);
-  unix_socket_name.sun_path[0] = 0;
   old = umask(0077);
   fd = socket(PF_UNIX, SOCK_DGRAM, 0);
   if (fd == -1) return -1;
@@ -54,6 +53,12 @@ static int sock_dgram(int srv)
 void sigchld_handler(int __attribute__((unused)) sig)
 {
   waitpid(-1, 0, WNOHANG);
+}
+
+void cleanup(int __attribute__((unused)) sig)
+{
+  unlink(socket_path);
+  exit(0);
 }
 
 void server()
@@ -71,6 +76,7 @@ void server()
   int i;
   char * argv[16] = { 0, };
   sighandler_t sigchld;
+  sighandler_t sigint;
 
   int fd = sock_dgram(1);
   if (fd == -1) 
@@ -90,6 +96,7 @@ void server()
   msg.msg_controllen = sizeof(cmsgs);
 
   sigchld = signal(SIGCHLD, sigchld_handler);
+  sigint = signal(SIGCHLD, cleanup);
   
   while((rv = recvmsg(fd, &msg, 0))!=-1)
   {
@@ -114,6 +121,7 @@ void server()
     if(pid==0)
     {
       signal(SIGCHLD, sigchld);
+      signal(SIGINT, cleanup);
       close(fd);
       for(i=0;i<3;i++)
       {
