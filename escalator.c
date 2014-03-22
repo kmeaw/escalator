@@ -121,7 +121,7 @@ void server()
     if(pid==0)
     {
       signal(SIGCHLD, sigchld);
-      signal(SIGINT, cleanup);
+      signal(SIGINT, sigint);
       close(fd);
       for(i=0;i<3;i++)
       {
