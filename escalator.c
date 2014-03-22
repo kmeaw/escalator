@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -23,6 +24,9 @@ static int sock_dgram(int srv)
 {
   int fd;
   mode_t old;
+  int euid;
+
+  euid = geteuid();
 
   if (sudo_uid)
     seteuid(atoi(sudo_uid));
@@ -47,6 +51,7 @@ static int sock_dgram(int srv)
     return -1;
   }
   umask(old);
+  seteuid(euid);
   return fd;
 }
 
@@ -135,6 +140,8 @@ void server()
       {
 	close(((int*)CMSG_DATA(cmsg))[3]);
 	close(((int*)CMSG_DATA(cmsg))[4]);
+	setsid();
+	ioctl(2, TIOCSCTTY, 1);
 	execvp(argv[0], argv);
 	exit(1);
       }
@@ -146,7 +153,7 @@ void server()
 	{
 	  close(((int*)CMSG_DATA(cmsg))[3]);
 	  while(read(((int*)CMSG_DATA(cmsg))[4], &sig, sizeof(int)) == sizeof(int))
-	    kill(pid, sig);
+	    killpg(pid, sig);
 	  exit(0);
 	}
 	close(((int*)CMSG_DATA(cmsg))[4]);
