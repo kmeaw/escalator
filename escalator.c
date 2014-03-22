@@ -96,7 +96,7 @@ void server()
   msg.msg_controllen = sizeof(cmsgs);
 
   sigchld = signal(SIGCHLD, sigchld_handler);
-  sigint = signal(SIGCHLD, cleanup);
+  sigint = signal(SIGINT, cleanup);
   
   while((rv = recvmsg(fd, &msg, 0))!=-1)
   {
