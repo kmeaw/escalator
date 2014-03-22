@@ -263,7 +263,7 @@ int main(int argc, char **argv)
     snprintf(user, 16, "%d", getuid());
     sudo_uid = user;
   }
-  snprintf(socket_path, sizeof(socket_path), "#escalator-%s", sudo_uid);
+  snprintf(socket_path, sizeof(socket_path), "/tmp/escalator-%s", sudo_uid);
 
   if (argc == 1)
     server();
